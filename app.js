@@ -45,37 +45,36 @@ app.get("/register",(req,res)=>{
     res.render("register.ejs")
 })
 
+
 app.post("/register",async(req,res)=>{
 
   const{email,userName,password}=req.body /* yo jun email,userName xa yo form ko name sanga match garnuparxa natra error aauxa hai */
-    if(!email || !userName || !password){  /*yo server side validation ho */
-        res.send("please fill the form")
-    }
-    
-  await registers.create({
+  
+await registers.create({
     email:email,
     userName:userName,
-    password:password,
+    password:password
 
    })
-   res.send("register successfully")
-   
-
+   res.redirect("/users")
 })
+
+
+
+
+
 
 app.get("/addblog",(req,res)=>{
     res.render("addBlog.ejs")
 })
 
 app.post("/addblog",async(req,res)=>{
- const title=req.body.title
- const subTitle=req.body.subTitle
- const   description =req.body.description
-  
+  const{title,subTitle,description}=req.body
+ 
      await createBlogs.create({  /*yo create bhaneko mero model ko name ho ie table ko name  */
         title:title,
         subTitle:subTitle,
-        description:description
+        description:description,
      })
      
      res.redirect("/")
@@ -86,9 +85,77 @@ app.post("/addblog",async(req,res)=>{
 
 
 
+
+app.get("/users",async(req,res)=>{
+    const datafetch= await registers.findAll()
+    res.render("users.ejs",{uimapathakoseconddata:datafetch})
+})
+
+/*single page ko lagi hai*/
+app.get("/singlePage/:id",async(req,res)=>{
+    const id=req.params.id
+   const fetchData= await createBlogs.findByPk(id)
+    res.render("singlePage.ejs",{data:fetchData})
+}
+)
+
+
+
+// this is for delete operation fully for delete operation
+app.get("/delete/:id",(req,res)=>{
+    const id=req.params.id
+            createBlogs.destroy({
+                 where: {
+                     id: id
+                     } 
+            });
+  res.redirect("/")
+})
+
+// delete the username password username single page nabanagai kana
+app.get("/single2/:id",(req,res)=>{
+    const id= req.params.id
+     registers.destroy({
+        where :{
+            id:id
+        }
+     });
+    res.redirect("/users")
+
+})
+
+
+// update le kunai page magda dekhaune ui handle garda 
+app.get("/update/:id",async(req,res)=>{
+    const id=req.params.id
+      const fetchdata= await createBlogs.findByPk(id)
+     
+    res.render("update.ejs",{blogInformation:fetchdata})
+})
+
+
+// now update garne bhaneko data base maa new  value write garne ho so post path hit gareko xa
+app.post("/update/:id",async(req,res)=>{
+    const id=req.params.id
+    const{title,subTitle,description}=req.body
+         await createBlogs.update({
+            title:title,
+            subTitle:subTitle,
+            description:description
+          },{
+            where:{
+                id:id
+            }
+          })
+          res.redirect(`/singlePage/${id}`)
+})
+
+
+
+
 const PORT=5000  /* yo chai generally mero project lai kun port number ma run garaune bhaane ho .. maile chai port number  5000 ma 
                             mero project lai run garako xu ra port number choose garda chai kamtima 3000 bhanda badi garda bhayo kina 
-                            bhane reserve port haru huna sakxan 1000 vhanda muniko sabai system le use gareko hunxa so make sure*/
+                          bhane reserve port haru huna sakxan 1000 vhanda muniko sabai system le use gareko hunxa so make sure*/
 app.listen(PORT,()=>{
     console.log (`node project has started at ${PORT}` )
 })
